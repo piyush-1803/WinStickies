@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>WinStickies</title>
+  <link rel="stylesheet" href="note.css">
+</head>
+<body>
+  <div class="note-container yellow" id="note-container">
+    <div class="title-bar" id="title-bar">
+      <div class="controls left">
+        <button id="close-btn" class="mac-btn close" title="Close Note"></button>
+        <button id="collapse-btn" class="mac-btn collapse" title="Collapse/Expand"></button>
+      </div>
+      <div class="drag-area"></div>
+      <div class="controls middle color-picker" id="color-picker">
+        <button class="color-dot yellow" data-color="yellow"></button>
+        <button class="color-dot green" data-color="green"></button>
+        <button class="color-dot blue" data-color="blue"></button>
+        <button class="color-dot pink" data-color="pink"></button>
+        <button class="color-dot purple" data-color="purple"></button>
+        <button class="color-dot gray" data-color="gray"></button>
+      </div>
+      <div class="drag-area"></div>
+      <div class="controls right">
+        <button id="new-btn" class="tool-btn" title="New Note">＋</button>
+        <button id="float-btn" class="tool-btn" title="Always on Top">📌</button>
+        <button id="translucent-btn" class="tool-btn" title="Translucent">👻</button>
+      </div>
+    </div>
+    <div class="content-area">
+      <div id="content" contenteditable="true" spellcheck="false"></div>
+    </div>
+  </div>
+  <script src="note.js"></script>
+</body>
+</html>

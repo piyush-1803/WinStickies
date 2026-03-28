@@ -1,0 +1,46 @@
+{
+  "name": "winstickies",
+  "version": "1.0.0",
+  "description": "WinStickies - Electron sticky notes app",
+  "main": "main.js",
+  "scripts": {
+    "start": "node launcher.js",
+    "build": "electron-forge make"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "icon": "assets/icon",
+        "asar": true
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "winstickies",
+            "setupIcon": "assets/icon.ico"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "win32"
+          ]
+        }
+      ]
+    }
+  },
+  "keywords": [
+    "electron",
+    "sticky-notes",
+    "windows"
+  ],
+  "author": "Piyush",
+  "license": "MIT",
+  "devDependencies": {
+    "@electron-forge/cli": "^7.7.0",
+    "@electron-forge/maker-squirrel": "^7.7.0",
+    "@electron-forge/maker-zip": "^7.7.0",
+    "electron": "^37.0.0"
+  }
+}
