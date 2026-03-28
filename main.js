@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-const NOTES_FILE_PATH = path.join(__dirname, "data", "notes.json");
+const NOTES_FILE_PATH = path.join(app.getPath("userData"), "notes.json");
 
 /** @type {Map<string, BrowserWindow>} */
 const noteWindows = new Map();
