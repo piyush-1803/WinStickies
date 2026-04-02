@@ -1,7 +1,7 @@
 {
   "name": "winstickies",
-  "version": "1.0.0",
-  "description": "WinStickies - Electron sticky notes app",
+  "version": "2.0.0",
+  "description": "WinStickies v2 - Feature-rich sticky notes for Windows",
   "main": "main.js",
   "scripts": {
     "start": "node launcher.js",

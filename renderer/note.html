@@ -7,30 +7,54 @@
 </head>
 <body>
   <div class="note-container yellow" id="note-container">
-    <div class="title-bar" id="title-bar">
-      <div class="controls left">
-        <button id="close-btn" class="mac-btn close" title="Close Note"></button>
-        <button id="collapse-btn" class="mac-btn collapse" title="Collapse/Expand"></button>
+    <div class="note-layout">
+      <div class="title-bar" id="title-bar">
+        <div class="controls left">
+          <button id="close-btn" class="mac-btn close" title="Close Note"></button>
+          <button id="save-btn" class="mac-btn save" title="Save Note"></button>
+        </div>
+        <div class="drag-area"></div>
+        <div class="controls middle color-picker" id="color-picker">
+          <button class="color-dot yellow" data-color="yellow"></button>
+          <button class="color-dot green" data-color="green"></button>
+          <button class="color-dot blue" data-color="blue"></button>
+          <button class="color-dot pink" data-color="pink"></button>
+          <button class="color-dot purple" data-color="purple"></button>
+          <button class="color-dot gray" data-color="gray"></button>
+        </div>
+        <div class="drag-area"></div>
+        <div class="controls right">
+          <button id="new-btn" class="tool-btn" title="New Note">＋</button>
+          <button id="float-btn" class="tool-btn" title="Always on Top">📌</button>
+          <button id="translucent-btn" class="tool-btn" title="Translucent">👻</button>
+        </div>
       </div>
-      <div class="drag-area"></div>
-      <div class="controls middle color-picker" id="color-picker">
-        <button class="color-dot yellow" data-color="yellow"></button>
-        <button class="color-dot green" data-color="green"></button>
-        <button class="color-dot blue" data-color="blue"></button>
-        <button class="color-dot pink" data-color="pink"></button>
-        <button class="color-dot purple" data-color="purple"></button>
-        <button class="color-dot gray" data-color="gray"></button>
+      <div class="tools-sidebar" id="tools-sidebar">
+        <button class="tools-toggle" id="tools-toggle" title="Tools">›</button>
+        <div class="tools-panel" id="tools-panel">
+          <button class="tool-item" id="bullet-btn" title="Bullet List">•≡</button>
+          <button class="tool-item" id="checkbox-btn" title="Checkbox">☑</button>
+          <button class="tool-item" id="bold-btn" title="Bold"><b>B</b></button>
+          <button class="tool-item" id="italic-btn" title="Italic"><i>I</i></button>
+          <button class="tool-item" id="underline-btn" title="Underline"><u>U</u></button>
+          <button class="tool-item" id="highlight-btn" title="Highlight">🖍</button>
+          <button class="tool-item" id="clear-btn" title="Clear Formatting">✕</button>
+          <button class="tool-item" id="pomodoro-btn" title="Pomodoro">🍅</button>
+          <div class="pomodoro-panel" id="pomodoro-panel">
+            <div class="pomo-display" id="pomo-display">25:00</div>
+            <div class="pomo-controls">
+              <button class="pomo-btn" id="pomo-start">▶</button>
+              <button class="pomo-btn" id="pomo-reset">↺</button>
+            </div>
+            <div class="pomo-label" id="pomo-label">Focus</div>
+          </div>
+        </div>
       </div>
-      <div class="drag-area"></div>
-      <div class="controls right">
-        <button id="new-btn" class="tool-btn" title="New Note">＋</button>
-        <button id="float-btn" class="tool-btn" title="Always on Top">📌</button>
-        <button id="translucent-btn" class="tool-btn" title="Translucent">👻</button>
+      <div class="content-area">
+        <div id="content" contenteditable="true" spellcheck="false"></div>
       </div>
-    </div>
-    <div class="content-area">
-      <div id="content" contenteditable="true" spellcheck="false"></div>
-    </div>
+    </div> <!-- end note-layout -->
+    <div class="resize-handle" id="resize-handle"></div>
   </div>
   <script src="note.js"></script>
 </body>

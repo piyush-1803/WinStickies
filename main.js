@@ -63,7 +63,9 @@ function createNoteWindow(note) {
     transparent: true,
     backgroundColor: "#00000000",
     alwaysOnTop: Boolean(note.isFloating),
-    resizable: !note.isCollapsed,
+    resizable: true,
+    minWidth: 200,
+    minHeight: 120,
     skipTaskbar: true,
     hasShadow: false,
     webPreferences: {
@@ -157,6 +159,12 @@ if (!gotTheLock) {
   });
 
   app.whenReady().then(() => {
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      path: process.execPath,
+      args: []
+    });
+
     // 1. & 2. Create tray icon with color square fallback
     let trayIcon;
     const iconPath = path.join(__dirname, "assets", "icon.ico");
@@ -235,7 +243,6 @@ ipcMain.handle("notes:update", (_event, noteId, patch) => {
     }
 
     if (Object.prototype.hasOwnProperty.call(patch, "isCollapsed")) {
-      win.setResizable(!updated.isCollapsed);
       const bounds = win.getBounds();
       if (updated.isCollapsed) {
         win.setSize(bounds.width, 42);
@@ -253,6 +260,17 @@ ipcMain.handle("notes:create", () => {
 });
 
 ipcMain.handle("notes:close", (_event, noteId) => {
+  const win = noteWindows.get(noteId);
+  if (win && !win.isDestroyed()) {
+    win.close();
+  }
+  return true;
+});
+
+ipcMain.handle("notes:delete", (_event, noteId) => {
+  const notes = readNotes();
+  const filtered = notes.filter((n) => n.id !== noteId);
+  writeNotes(filtered);
   const win = noteWindows.get(noteId);
   if (win && !win.isDestroyed()) {
     win.close();
