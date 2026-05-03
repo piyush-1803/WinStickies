@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinStickies - Mac Stickies for Windows. Finally.</title>
+    <meta name="description" content="A native Windows desktop app that replicates the macOS Stickies experience. Floating, persistent, and lightweight sticky notes for your desktop.">
+    
+    <!-- SEO & Social -->
+    <meta property="og:title" content="WinStickies - Mac Stickies for Windows">
+    <meta property="og:description" content="Mac Stickies. But for Windows. Finally. Floating, persistent, and lightweight.">
+    <meta property="og:type" content="website">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg: oklch(99% 0.002 240);
+            --fg: oklch(18% 0.012 250);
+            --accent: oklch(58% 0.18 255);
+            --border: oklch(92% 0.005 250);
+            --muted: oklch(54% 0.012 250);
+            
+            --sticky-yellow: oklch(95% 0.1 90);
+            --sticky-pink: oklch(92% 0.08 0);
+            --sticky-green: oklch(94% 0.1 140);
+            --sticky-blue: oklch(93% 0.08 220);
+
+            --neo-shadow: 12px 12px 24px rgba(0,0,0,0.05), -12px -12px 24px rgba(255,255,255,0.8);
+            --neo-shadow-inset: inset 6px 6px 12px rgba(0,0,0,0.05), inset -6px -6px 12px rgba(255,255,255,0.8);
+            
+            --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+            --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+        }
+
+        .dark {
+            --bg: oklch(15% 0.01 250);
+            --fg: oklch(98% 0.002 240);
+            --accent: oklch(65% 0.2 255);
+            --border: oklch(25% 0.01 250);
+            --muted: oklch(55% 0.01 250);
+
+            --sticky-yellow: oklch(35% 0.08 90);
+            --sticky-pink: oklch(32% 0.06 0);
+            --sticky-green: oklch(34% 0.08 140);
+            --sticky-blue: oklch(33% 0.06 220);
+
+            --neo-shadow: 10px 10px 20px #0a0a0a, -10px -10px 20px #1a1a1a;
+            --neo-shadow-inset: inset 4px 4px 8px #0a0a0a, inset -4px -4px 8px #1a1a1a;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--fg);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        h1, h2, h3 {
+            font-family: var(--font-display);
+            letter-spacing: -0.02em;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dark .glass {
+            background: rgba(20, 20, 20, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .neomorph {
+            background: var(--bg);
+            box-shadow: var(--neo-shadow);
+            border: 1px solid var(--border);
+        }
+
+        .neomorph-inset {
+            background: var(--bg);
+            box-shadow: var(--neo-shadow-inset);
+            border: 1px solid var(--border);
+        }
+
+        /* Sticky Note Components */
+        .sticky-note {
+            width: 240px;
+            min-height: 240px;
+            padding: 1.25rem;
+            border-radius: 6px;
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .sticky-header {
+            height: 32px;
+            margin: -1.25rem -1.25rem 0.75rem -1.25rem;
+            background: rgba(0,0,0,0.05);
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding: 0 0.75rem;
+            opacity: 0.3;
+        }
+
+        .sticky-yellow { background: var(--sticky-yellow); color: oklch(25% 0.1 90); }
+        .sticky-pink { background: var(--sticky-pink); color: oklch(25% 0.08 0); }
+        .sticky-green { background: var(--sticky-green); color: oklch(25% 0.1 140); }
+        .sticky-blue { background: var(--sticky-blue); color: oklch(25% 0.1 220); }
+
+        .dark .sticky-yellow, .dark .sticky-pink, .dark .sticky-green, .dark .sticky-blue {
+            color: oklch(98% 0.01 240);
+        }
+
+        .sticky-note textarea {
+            color: inherit;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0% { transform: translate3d(0, 0, 0) rotate(var(--rot, 0deg)); }
+            50% { transform: translate3d(0, -15px, 20px) rotate(calc(var(--rot, 0deg) + 2deg)); }
+            100% { transform: translate3d(0, 0, 0) rotate(var(--rot, 0deg)); }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .reveal {
+            opacity: 0;
+            animation: slideUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { 
+            background: var(--border); 
+            border-radius: 5px; 
+            border: 2px solid var(--bg);
+        }
+
+        /* Theme Toggle UI */
+        .theme-toggle {
+            width: 52px;
+            height: 28px;
+            background: var(--border);
+            border-radius: 100px;
+            padding: 3px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            left: 3px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .dark .theme-toggle { background: var(--accent); }
+        .dark .theme-toggle::after { left: 27px; background: #1a1a1a; }
+
+        .btn-mac {
+            background: linear-gradient(180deg, var(--accent) 0%, oklch(50% 0.2 255) 100%);
+            color: white;
+            font-weight: 700;
+            padding: 1rem 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.2);
+            transition: all 0.2s ease;
+        }
+        .btn-mac:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        .btn-mac:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <nav class="fixed top-0 w-full z-[100] glass px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-yellow-400 rounded-xl shadow-lg flex items-center justify-center text-[10px] font-black text-yellow-900 rotate-[-5deg] border-b-2 border-yellow-600/30">
+                STICKY
+            </div>
+            <span class="font-black text-2xl tracking-tight">WinStickies</span>
+        </div>
+        
+        <div class="flex items-center gap-6">
+            <div class="hidden md:flex items-center gap-8 mr-4">
+                <a href="#showcase" class="text-sm font-bold opacity-70 hover:opacity-100 transition-opacity">Showcase</a>
+                <a href="#demo" class="text-sm font-bold opacity-70 hover:opacity-100 transition-opacity">Try Demo</a>
+                <a href="#install" class="text-sm font-bold opacity-70 hover:opacity-100 transition-opacity">Install</a>
+            </div>
+            
+            <div class="flex items-center gap-3 border-l pl-6 border-gray-200/50">
+                <i class="fas fa-sun text-xs opacity-50"></i>
+                <div class="theme-toggle" id="theme-toggle"></div>
+                <i class="fas fa-moon text-xs opacity-50"></i>
+            </div>
+            
+            <a href="https://github.com/piyush-1803/WinStickies" target="_blank" class="hidden sm:flex btn-mac !py-2.5 !px-5 text-sm">
+                <i class="fab fa-github mr-2"></i> GitHub
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="pt-48 pb-32 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
+        <div class="reveal" style="animation-delay: 0.1s">
+            <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full glass text-[11px] font-black text-blue-600 mb-10 uppercase tracking-[0.2em] border border-blue-200/50">
+                <span class="flex h-2 w-2 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                </span>
+                v2.0.0 Now Available
+            </div>
+        </div>
+        
+        <h1 class="text-7xl md:text-[100px] font-black mb-10 max-w-6xl leading-[0.9] reveal" style="animation-delay: 0.2s">
+            Mac Stickies.<br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">But for Windows.</span>
+        </h1>
+        
+        <p class="text-2xl text-gray-500 mb-16 max-w-3xl leading-relaxed reveal" style="animation-delay: 0.3s">
+            Floating, persistent, and lightweight. Replicating the classic macOS Stickies experience with zero compromise.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-6 mb-32 reveal" style="animation-delay: 0.4s">
+            <a href="https://github.com/piyush-1803/WinStickies/releases/download/v2.0.0/winstickies-2.0.0.Setup.exe" class="btn-mac text-lg">
+                <i class="fas fa-download mr-3"></i> Download v2.0.0
+            </a>
+            <a href="#showcase" class="btn-neo px-10 py-4 font-bold rounded-2xl flex items-center border border-gray-200/50">
+                See it in action
+            </a>
+        </div>
+    </header>
+
+    <!-- Showcase Section -->
+    <section id="showcase" class="py-32 px-6 bg-gradient-to-b from-transparent to-blue-50/30 dark:to-blue-950/10 overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-24 reveal">
+                <h2 class="text-5xl font-black mb-6">Built for Focus.</h2>
+                <p class="text-xl text-gray-500">A clean, distraction-free way to keep your thoughts visible.</p>
+            </div>
+            
+            <div class="relative w-full aspect-[16/8] rounded-[60px] neomorph overflow-hidden p-4 border-4 border-white/50 dark:border-white/5 shadow-2xl reveal">
+                <!-- Mock Desktop Background -->
+                <div class="w-full h-full rounded-[44px] bg-cover bg-center relative overflow-hidden group" style="background-image: url('https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&q=80&w=2000');">
+                    <div class="absolute inset-0 bg-black/10 transition-all duration-1000"></div>
+                    
+                    <!-- Animated Sticky Note 1 -->
+                    <div class="sticky-note sticky-yellow absolute top-[15%] left-[10%] animate-float" style="--rot: -3deg;">
+                        <div class="sticky-header"></div>
+                        <h4 class="font-black text-xs mb-2 opacity-50 uppercase tracking-widest">WELCOME</h4>
+                        <p class="text-lg font-bold leading-tight">WinStickies is now installed. Drag me anywhere!</p>
+                        <div class="mt-auto pt-4 flex justify-between items-center opacity-30 text-[10px] font-bold">
+                            <span>RESIZABLE</span>
+                            <span>PERSISTENT</span>
+                        </div>
+                    </div>
+
+                    <!-- Animated Sticky Note 2 -->
+                    <div class="sticky-note sticky-pink absolute top-[40%] right-[15%] animate-float" style="--rot: 2deg;">
+                        <div class="sticky-header"></div>
+                        <h4 class="font-black text-xs mb-2 opacity-50 uppercase tracking-widest">PROMOTIONS</h4>
+                        <p class="text-lg font-bold leading-tight line-through opacity-40">• Review design specs</p>
+                        <p class="text-lg font-bold leading-tight">• Share with friends!</p>
+                        <p class="text-lg font-bold leading-tight">• Coffee break ☕</p>
+                    </div>
+
+                    <!-- Animated Sticky Note 3 -->
+                    <div class="sticky-note sticky-green absolute bottom-[15%] left-[35%] animate-float" style="--rot: 1deg;">
+                        <div class="sticky-header"></div>
+                        <h4 class="font-black text-xs mb-2 opacity-50 uppercase tracking-widest">QUICK IDEA</h4>
+                        <p class="text-lg font-bold leading-tight italic">"What if sticky notes could talk? (Maybe not, let's keep it simple.)"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section (Non-Navigable) -->
+    <section id="features" class="py-32 px-6">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="neomorph p-10 rounded-[40px] hover:scale-[1.02] transition-transform duration-500">
+                <div class="w-16 h-16 neomorph-inset rounded-2xl flex items-center justify-center text-3xl text-blue-600 mb-8">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h3 class="text-2xl font-black mb-4">Always on Top</h3>
+                <p class="text-gray-500 leading-relaxed">Float your notes above all other windows. Never lose your focus or your data.</p>
+            </div>
+            
+            <div class="neomorph p-10 rounded-[40px] hover:scale-[1.02] transition-transform duration-500">
+                <div class="w-16 h-16 neomorph-inset rounded-2xl flex items-center justify-center text-3xl text-green-600 mb-8">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h3 class="text-2xl font-black mb-4">Persistent</h3>
+                <p class="text-gray-500 leading-relaxed">Notes survive restarts and reboots. Your data is stored safely on your machine.</p>
+            </div>
+
+            <div class="neomorph p-10 rounded-[40px] hover:scale-[1.02] transition-transform duration-500">
+                <div class="w-16 h-16 neomorph-inset rounded-2xl flex items-center justify-center text-3xl text-yellow-500 mb-8">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <h3 class="text-2xl font-black mb-4">Color Coding</h3>
+                <p class="text-gray-500 leading-relaxed">Classic color palette. Organise your desktop by project, urgency, or mood.</p>
+            </div>
+
+            <div class="neomorph p-10 rounded-[40px] hover:scale-[1.02] transition-transform duration-500">
+                <div class="w-16 h-16 neomorph-inset rounded-2xl flex items-center justify-center text-3xl text-purple-600 mb-8">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                </div>
+                <h3 class="text-2xl font-black mb-4">Fully Flexible</h3>
+                <p class="text-gray-500 leading-relaxed">Drag anywhere. Resize freely. Create as many notes as your desktop can hold.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Demo -->
+    <section id="demo" class="py-32 px-6">
+        <div class="max-w-5xl mx-auto text-center mb-16 reveal">
+            <h2 class="text-4xl md:text-6xl font-black mb-6">Interactive Demo</h2>
+            <p class="text-xl text-gray-500">Drag to move, type to edit, <span class="text-blue-600 font-bold">right-click</span> to swap colors.</p>
+        </div>
+        
+        <div class="max-w-5xl mx-auto neomorph p-4 relative h-[650px] w-full overflow-hidden bg-white/20 backdrop-blur-md border border-white/40 reveal" id="demo-area">
+            <button id="add-note" class="absolute top-6 right-6 z-20 bg-blue-600 text-white w-14 h-14 rounded-2xl shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center text-xl">
+                <i class="fas fa-plus"></i>
+            </button>
+            
+            <div class="sticky-note sticky-yellow top-20 left-20" style="transform: rotate(-1deg) translate3d(0,0,0);">
+                <div class="sticky-header"></div>
+                <textarea class="w-full h-full bg-transparent border-none outline-none resize-none text-sm font-medium" placeholder="Type something...">Welcome! You can drag me or right-click to change my color.</textarea>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation Tabs -->
+    <section id="install" class="py-32 px-6 bg-white/10">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-5xl font-black mb-6">Install WinStickies</h2>
+                <p class="text-xl text-gray-500">Free and open source.</p>
+            </div>
+            
+            <div class="neomorph p-12 rounded-[50px] reveal">
+                <div class="flex flex-col sm:flex-row gap-4 mb-12 neomorph-inset p-2 rounded-3xl">
+                    <button onclick="switchTab('download')" id="tab-download" class="flex-1 py-5 font-black rounded-2xl transition-all tab-active">
+                        <i class="fas fa-download mr-3"></i> Recommended Installer
+                    </button>
+                    <button onclick="switchTab('source')" id="tab-source" class="flex-1 py-5 font-black rounded-2xl transition-all">
+                        <i class="fas fa-code mr-3"></i> Build from Source
+                    </button>
+                </div>
+                
+                <div id="content-download" class="text-center py-10">
+                    <a href="https://github.com/piyush-1803/WinStickies/releases/download/v2.0.0/winstickies-2.0.0.Setup.exe" class="btn-mac !px-12 !py-6 text-xl inline-block">
+                        Download WinStickies-Setup.exe
+                    </a>
+                    <p class="mt-8 text-sm text-gray-400">Version 2.0.0 • MIT License</p>
+                </div>
+                
+                <div id="content-source" class="hidden">
+                    <div class="bg-gray-950 text-gray-400 p-10 rounded-[32px] font-mono text-sm relative group overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-blue-600"></div>
+                        <pre id="code-block" class="whitespace-pre-wrap leading-relaxed">git clone https://github.com/piyush-1803/WinStickies.git
+cd WinStickies
+npm install
+npm start</pre>
+                        <button onclick="copyCode()" class="absolute top-8 right-8 w-12 h-12 glass rounded-xl flex items-center justify-center hover:text-white transition-all">
+                            <i class="far fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-40 px-6 border-t border-gray-100 dark:border-white/5">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-16">
+            <div class="max-w-sm">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-8 h-8 bg-yellow-400 rounded-lg"></div>
+                    <span class="font-black text-2xl tracking-tight">WinStickies</span>
+                </div>
+                <p class="text-lg text-gray-500 mb-10">Built with ❤️ by <a href="https://github.com/piyush-1803" class="text-blue-600 hover:underline">piyush-1803</a>.</p>
+                <div class="flex gap-8">
+                    <a href="https://github.com/piyush-1803/WinStickies" class="text-3xl text-gray-300 hover:text-blue-600 transition-colors"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+            <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">© 2024 WinStickies • MIT LICENSE</p>
+        </div>
+    </footer>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') html.classList.add('dark');
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        // Demo Area Logic
+        const demoArea = document.getElementById('demo-area');
+        const addNoteBtn = document.getElementById('add-note');
+        const colors = ['sticky-yellow', 'sticky-pink', 'sticky-green', 'sticky-blue'];
+
+        function initNote(note) {
+            let isDragging = false;
+            let xOffset = 0, yOffset = 0, initialX, initialY;
+            const header = note.querySelector('.sticky-header');
+
+            header.addEventListener('mousedown', e => {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                isDragging = true;
+                note.style.zIndex = 1000;
+                document.querySelectorAll('.sticky-note').forEach(n => { if (n !== note) n.style.zIndex = 10; });
+            });
+
+            window.addEventListener('mousemove', e => {
+                if (!isDragging) return;
+                xOffset = e.clientX - initialX;
+                yOffset = e.clientY - initialY;
+                note.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
+            });
+
+            window.addEventListener('mouseup', () => isDragging = false);
+
+            note.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                const cur = colors.find(c => note.classList.contains(c));
+                note.classList.remove(cur);
+                note.classList.add(colors[(colors.indexOf(cur) + 1) % colors.length]);
+            });
+        }
+
+        document.querySelectorAll('#demo-area .sticky-note').forEach(initNote);
+        addNoteBtn.addEventListener('click', () => {
+            const note = document.createElement('div');
+            note.className = `sticky-note ${colors[Math.floor(Math.random() * colors.length)]} absolute top-20 left-20`;
+            note.innerHTML = `<div class="sticky-header"></div><textarea class="w-full h-full bg-transparent border-none outline-none resize-none text-sm font-medium" placeholder="Type something..."></textarea>`;
+            demoArea.appendChild(note);
+            initNote(note);
+        });
+
+        function switchTab(tab) {
+            const isDown = tab === 'download';
+            document.getElementById('tab-download').classList.toggle('tab-active', isDown);
+            document.getElementById('tab-source').classList.toggle('tab-active', !isDown);
+            document.getElementById('content-download').classList.toggle('hidden', !isDown);
+            document.getElementById('content-source').classList.toggle('hidden', isDown);
+        }
+
+        function copyCode() {
+            navigator.clipboard.writeText(document.getElementById('code-block').innerText).then(() => {
+                const icon = event.currentTarget.querySelector('i');
+                icon.className = 'fas fa-check text-green-500';
+                setTimeout(() => icon.className = 'far fa-copy', 2000);
+            });
+        }
+
+        const revealObserver = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('reveal'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+    </script>
+</body>
+</html>
